@@ -1,11 +1,17 @@
-const { PrismaClient } = require('@prisma/client');
-const { marked } = require('marked');
+const { PrismaClient } = require("@prisma/client");
+const { marked } = require("marked");
 const prisma = new PrismaClient();
 
 // ✅ Create a new blog
 exports.createBlog = async (req, res) => {
   const { title, synopsis, content, featuredImg } = req.body;
-  const userId = req.user.userId; // ✅ from token
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: userId missing from token" });
+  }
 
   try {
     const newBlog = await prisma.blog.create({
@@ -14,14 +20,26 @@ exports.createBlog = async (req, res) => {
         synopsis,
         content,
         featuredImg,
-        authorId: userId,
-      }
+        author: {
+          connect: { id: userId }, // ✅ connect blog to user by ID
+        },
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     });
 
     res.status(201).json(newBlog);
   } catch (error) {
-    console.error('Blog creation error:', error);
-    res.status(500).json({ message: 'Something went wrong' });
+    console.error("❌ Blog creation error:", error);
+    res.status(500).json({ message: "Failed to create blog" });
   }
 };
 
@@ -30,15 +48,15 @@ exports.getAllBlogs = async (req, res) => {
   try {
     const blogs = await prisma.blog.findMany({
       where: { isDeleted: false },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         author: {
-          select: { firstName: true, lastName: true }
-        }
-      }
+          select: { firstName: true, lastName: true },
+        },
+      },
     });
 
-    const formatted = blogs.map(blog => ({
+    const formatted = blogs.map((blog) => ({
       id: blog.id,
       title: blog.title,
       synopsis: blog.synopsis,
@@ -47,14 +65,15 @@ exports.getAllBlogs = async (req, res) => {
       updatedAt: blog.updatedAt,
       author: {
         name: `${blog.author.firstName} ${blog.author.lastName}`,
-        avatar: `${blog.author.firstName[0]}${blog.author.lastName[0]}`.toUpperCase()
-      }
+        avatar:
+          `${blog.author.firstName[0]}${blog.author.lastName[0]}`.toUpperCase(),
+      },
     }));
 
     res.json(formatted);
   } catch (error) {
-    console.error('Error fetching blogs:', error);
-    res.status(500).json({ message: 'Failed to load blogs' });
+    console.error("Error fetching blogs:", error);
+    res.status(500).json({ message: "Failed to load blogs" });
   }
 };
 
@@ -67,13 +86,13 @@ exports.getBlogById = async (req, res) => {
       where: { id: blogId },
       include: {
         author: {
-          select: { firstName: true, lastName: true }
-        }
-      }
+          select: { firstName: true, lastName: true },
+        },
+      },
     });
 
     if (!blog || blog.isDeleted) {
-      return res.status(404).json({ message: 'Blog not found' });
+      return res.status(404).json({ message: "Blog not found" });
     }
 
     const htmlContent = marked(blog.content);
@@ -88,12 +107,13 @@ exports.getBlogById = async (req, res) => {
       content: htmlContent,
       author: {
         name: `${blog.author.firstName} ${blog.author.lastName}`,
-        avatar: `${blog.author.firstName[0]}${blog.author.lastName[0]}`.toUpperCase()
-      }
+        avatar:
+          `${blog.author.firstName[0]}${blog.author.lastName[0]}`.toUpperCase(),
+      },
     });
   } catch (error) {
-    console.error('Error fetching blog:', error);
-    res.status(500).json({ message: 'Something went wrong' });
+    console.error("Error fetching blog:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -108,11 +128,13 @@ exports.updateBlog = async (req, res) => {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
 
     if (!blog || blog.isDeleted) {
-      return res.status(404).json({ message: 'Blog not found' });
+      return res.status(404).json({ message: "Blog not found" });
     }
 
     if (blog.authorId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized to update this blog' });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this blog" });
     }
 
     const updatedBlog = await prisma.blog.update({
@@ -128,8 +150,8 @@ exports.updateBlog = async (req, res) => {
 
     res.json(updatedBlog);
   } catch (error) {
-    console.error('Blog update error:', error);
-    res.status(500).json({ message: 'Something went wrong' });
+    console.error("Blog update error:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -142,11 +164,13 @@ exports.deleteBlog = async (req, res) => {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
 
     if (!blog || blog.isDeleted) {
-      return res.status(404).json({ message: 'Blog not found' });
+      return res.status(404).json({ message: "Blog not found" });
     }
 
     if (blog.authorId !== userId) {
-      return res.status(403).json({ message: 'Unauthorized to delete this blog' });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to delete this blog" });
     }
 
     await prisma.blog.update({
@@ -154,9 +178,9 @@ exports.deleteBlog = async (req, res) => {
       data: { isDeleted: true, updatedAt: new Date() },
     });
 
-    res.json({ message: 'Blog deleted successfully' });
+    res.json({ message: "Blog deleted successfully" });
   } catch (error) {
-    console.error('Blog delete error:', error);
-    res.status(500).json({ message: 'Something went wrong' });
+    console.error("Blog delete error:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };

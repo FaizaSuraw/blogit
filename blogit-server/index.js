@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { PrismaClient } = require('@prisma/client');
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const { PrismaClient } = require("@prisma/client");
 
 dotenv.config();
 const prisma = new PrismaClient();
@@ -11,25 +11,30 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const testRoutes = require('./routes/test.routes');
-app.use('/api/test', testRoutes);
+const testRoutes = require("./routes/test.routes");
+app.use("/api/test", testRoutes);
 
-const blogRoutes = require('./routes/blog.routes');
-app.use('/api/blogs', blogRoutes);
+const blogRoutes = require("./routes/blog.routes");
+app.use("/api/blogs", blogRoutes);
 
-const profileRoutes = require('./routes/profile.routes');
-app.use('/api/profile', profileRoutes);
+const uploadRoutes = require("./routes/upload.routes");
+// Serve static files
+app.use("/uploads", express.static("uploads"));
 
+// Upload route
+app.use("/api/upload", uploadRoutes);
+const profileRoutes = require("./routes/profile.routes");
+app.use("/api/profile", profileRoutes);
 
 // Import routes
-const authRoutes = require('./routes/auth.routes');
+const authRoutes = require("./routes/auth.routes");
 
 // Use routes
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Default route
-app.get('/', (req, res) => {
-  res.send('BlogIt API is running 🚀');
+app.get("/", (req, res) => {
+  res.send("BlogIt API is running 🚀");
 });
 
 // Start server

@@ -1,10 +1,10 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 // Get current user's profile
 exports.getProfile = async (req, res) => {
   try {
-    console.log('🔐 Authenticated user:', req.user); // Add this
+    console.log("🔐 Authenticated user:", req.user); // Add this
 
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -22,19 +22,18 @@ exports.getProfile = async (req, res) => {
             synopsis: true,
             featuredImg: true,
             createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
+            updatedAt: true,
+          },
+        },
+      },
     });
 
     res.json(user);
   } catch (error) {
-    console.error('❌ getProfile error:', error); // Add this
-    res.status(500).json({ message: 'Something went wrong' });
+    console.error("❌ getProfile error:", error); // Add this
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
-
 
 // Update current user's profile
 exports.updateProfile = async (req, res) => {
@@ -48,14 +47,14 @@ exports.updateProfile = async (req, res) => {
     });
 
     res.json({
-      message: 'Profile updated successfully',
+      message: "Profile updated successfully",
       user: {
         id: updatedUser.id,
         username: updatedUser.username,
       },
     });
   } catch (error) {
-    console.error('❌ Error updating profile:', error);
-    res.status(500).json({ message: 'Something went wrong' });
+    console.error("❌ Error updating profile:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };

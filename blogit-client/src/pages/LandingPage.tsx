@@ -110,9 +110,7 @@ export default function LandingPage() {
         >
           Sign In
         </Button>
-
       </Box>
-      
 
       <Navbar />
 
@@ -187,96 +185,96 @@ export default function LandingPage() {
 
         {/* Decorative Images */}
         <Box
-  sx={{
-    position: "absolute",
-    bottom: -100,
-    width: "100%",
-    height: isSmallScreen ? "300px" : "500px",
-    pointerEvents: "none",
-    zIndex: 1,
-  }}
->
-  <AnimatePresence mode="wait">
-    <motion.div
-      key={themeIndex}
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ type: "spring", stiffness: 50}}
-      style={{ position: "relative", width: "100%", height: "100%" }}
-    >
-      {/* Left Images */}
-      {currentTheme.images.left.map((src, index) => (
-        <Box
-          key={`left-${index}`}
-          component="img"
-          src={src}
-          alt={`left-${index}`}
           sx={{
             position: "absolute",
-            bottom: `${100 + index * 120}px`,
-            left: `${30 + index * 60}px`,
-            width: isSmallScreen ? "60px" : "100px",
-            opacity: 0.85,
-            transition: "all 1s ease-in-out",
-          }}
-        />
-      ))}
-
-      {/* Right Images */}
-      {currentTheme.images.right.map((src, index) => (
-        <Box
-          key={`right-${index}`}
-          component="img"
-          src={src}
-          alt={`right-${index}`}
-          sx={{
-            position: "absolute",
-            bottom: `${100 + index * 120}px`,
-            right: `${50 + index * 90}px`,
-            width: isSmallScreen ? "60px" : "100px",
-            opacity: 0.85,
-            transition: "all 1s ease-in-out",
-          }}
-        />
-      ))}
-
-      {/* Center Image (desktop only) */}
-      {!isSmallScreen && (
-        <Paper
-          elevation={6}
-          sx={{
-            position: "absolute",
-            bottom: "60px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            bgcolor: "white",
-            p: 2,
-            borderRadius: 20,
-            height: "340px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "all 1s ease-in-out",
+            bottom: -100,
+            width: "100%",
+            height: isSmallScreen ? "300px" : "500px",
+            pointerEvents: "none",
+            zIndex: 1,
           }}
         >
-          <Box
-            component="img"
-            src={currentTheme.images.center}
-            alt="center-theme-img"
-            sx={{
-              width: "100%",
-              height: "auto",
-              objectFit: "contain",
-            }}
-          />
-        </Paper>
-      )}
-    </motion.div>
-  </AnimatePresence>
-</Box>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={themeIndex}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              transition={{ type: "spring", stiffness: 50 }}
+              style={{ position: "relative", width: "100%", height: "100%" }}
+            >
+              {/* Left Images */}
+              {currentTheme.images.left.map((src, index) => (
+                <Box
+                  key={`left-${index}`}
+                  component="img"
+                  src={src}
+                  alt={`left-${index}`}
+                  sx={{
+                    position: "absolute",
+                    bottom: `${100 + index * 120}px`,
+                    left: `${30 + index * 60}px`,
+                    width: isSmallScreen ? "60px" : "100px",
+                    opacity: 0.85,
+                    transition: "all 1s ease-in-out",
+                  }}
+                />
+              ))}
+
+              {/* Right Images */}
+              {currentTheme.images.right.map((src, index) => (
+                <Box
+                  key={`right-${index}`}
+                  component="img"
+                  src={src}
+                  alt={`right-${index}`}
+                  sx={{
+                    position: "absolute",
+                    bottom: `${100 + index * 120}px`,
+                    right: `${50 + index * 90}px`,
+                    width: isSmallScreen ? "60px" : "100px",
+                    opacity: 0.85,
+                    transition: "all 1s ease-in-out",
+                  }}
+                />
+              ))}
+
+              {/* Center Image (desktop only) */}
+              {!isSmallScreen && (
+                <Paper
+                  elevation={6}
+                  sx={{
+                    position: "absolute",
+                    bottom: "60px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    bgcolor: "white",
+                    p: 2,
+                    borderRadius: 20,
+                    height: "340px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 1s ease-in-out",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={currentTheme.images.center}
+                    alt="center-theme-img"
+                    sx={{
+                      width: "100%",
+                      height: "auto",
+                      objectFit: "contain",
+                    }}
+                  />
+                </Paper>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </Box>
       </Box>
-      
+
       <About />
       <Footer />
     </>

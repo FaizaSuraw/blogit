@@ -1,278 +1,321 @@
-// src/pages/BlogsPage.tsx
+import React, { useEffect, useState, type ChangeEvent } from "react";
+import axios from "axios";
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
+  TextField,
+  Stack,
+  Box,
+  Avatar,
+  Card,
+  CardMedia,
+  CardContent,
+  Modal,
+  IconButton,
+  CssBaseline,
+  Input,
   Container,
   Paper,
-  Stack,
-  Avatar,
-  Box,
-  TextField,
-  CardMedia,
-  InputAdornment,
+  CircularProgress,
 } from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import ReactMarkdown from "react-markdown";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Blog {
   id: number;
   title: string;
   synopsis: string;
-  featuredImg: string;
   content: string;
+  featuredImg: string;
+  createdAt: string;
   author: {
     name: string;
     avatar: string;
   };
 }
 
+const backendBaseURL = "http://localhost:5000";
 
-export default function BlogsPage() {
-  const navigate = useNavigate();
+const BlogsPage: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [form, setForm] = useState({
-    title: "",
-    synopsis: "",
-    featuredImg: "",
-    content: "",
-  });
-  const [previewURL, setPreviewURL] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [form, setForm] = useState({ title: "", synopsis: "", content: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingBlogId, setEditingBlogId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
-    fetchBlogs();
-  }, []);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const fetchBlogs = async () => {
     try {
-      const res = await axios.get("/api/blogs");
+      const res = await axios.get(`${backendBaseURL}/api/blogs`);
       setBlogs(res.data);
-    } catch (err) {
-      console.error("Failed to load blogs", err);
+    } catch {
+      setError("Failed to load blogs");
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviewURL(url);
-      setForm({ ...form, featuredImg: url });
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setImageFile(e.target.files[0]);
     }
   };
 
-  const handleSubmit = async () => {
-    if (!token) return;
+  const handleCreateOrUpdateBlog = async () => {
+    if (!form.title || !form.synopsis || !form.content) {
+      toast.warning("Please fill in all blog fields");
+      return;
+    }
 
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+      setLoading(true);
+      let featuredImg = "";
 
-      if (editingId) {
-        await axios.patch(`/api/blogs/${editingId}`, form, config);
-        setEditingId(null);
-      } else {
-        await axios.post("/api/blogs", form, config);
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        const res = await axios.post(`${backendBaseURL}/api/upload`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        featuredImg = res.data.url;
       }
 
-      setForm({ title: "", synopsis: "", featuredImg: "", content: "" });
-      setPreviewURL("");
+      const blogData = {
+        ...form,
+        ...(featuredImg && { featuredImg }),
+      };
+
+      if (isEditing && editingBlogId !== null) {
+        await axios.put(`${backendBaseURL}/api/blogs/${editingBlogId}`, blogData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("✅ Blog updated successfully");
+      } else {
+        await axios.post(`${backendBaseURL}/api/blogs`, blogData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("✅ Blog posted successfully");
+      }
+
+      setForm({ title: "", synopsis: "", content: "" });
+      setImageFile(null);
+      setIsEditing(false);
+      setEditingBlogId(null);
       fetchBlogs();
-    } catch (err) {
-      console.error("Failed to save blog", err);
+    } catch (err: any) {
+      console.error(err.response?.data || err.message);
+      toast.error("❌ Error saving blog");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEdit = (blog: Blog) => {
-    setEditingId(blog.id);
-    setForm({
-      title: blog.title,
-      synopsis: blog.synopsis,
-      content: blog.content || "",
-      featuredImg: blog.featuredImg || "",
-    });
-    setPreviewURL(blog.featuredImg || "");
+    setForm({ title: blog.title, synopsis: blog.synopsis, content: blog.content });
+    setIsEditing(true);
+    setEditingBlogId(blog.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const avatarInitials = (name: string) => {
-    const [f, l] = name.split(" ");
-    return (f?.[0] ?? "") + (l?.[0] ?? "");
+  const handleDelete = async (blogId: number) => {
+    const confirm = window.confirm("Are you sure you want to delete this blog?");
+    if (!confirm) return;
+
+    try {
+      await axios.delete(`${backendBaseURL}/api/blogs/${blogId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.info("🗑️ Blog deleted");
+      fetchBlogs();
+    } catch (err) {
+      toast.error("Failed to delete blog");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (
-    <Box sx={{ bgcolor: "#f4f6f8", minHeight: "100vh" }}>
-      <AppBar position="static" sx={{ bgcolor: "#1976d2" }}>
+    <Box>
+      <CssBaseline />
+      <ToastContainer position="bottom-right" />
+      <AppBar position="sticky" sx={{ mb: 4 }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             BlogIt
           </Typography>
-          <Button
-            color="inherit"
-            onClick={() => {
-              localStorage.removeItem("token");
-              navigate("/login");
-            }}
-          >
-            Logout
+          <Button color="inherit" onClick={() => navigate("/")}>
+            Home
           </Button>
+          <Button color="inherit" onClick={() => navigate("/profile")}>
+            Profile
+          </Button>
+          <IconButton color="inherit" onClick={handleLogout}>
+            <LogoutIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 
-      <Container sx={{ mt: 4, mb: 6 }}>
-        {/* Blog Creation/Edit Form */}
-        <Typography variant="h4" mb={2}>
-          {editingId ? "Edit Blog" : "Create New Blog"}
-        </Typography>
-        <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+      <Container maxWidth="md">
+        <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
+          <Typography variant="h5" mb={2}>
+            {isEditing ? "✏️ Edit Blog" : "📝 Create New Blog"}
+          </Typography>
           <Stack spacing={2}>
             <TextField
+              name="title"
               label="Title"
-              fullWidth
               value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              onChange={handleChange}
+              fullWidth
             />
             <TextField
+              name="synopsis"
               label="Synopsis"
+              value={form.synopsis}
+              onChange={handleChange}
+              fullWidth
+            />
+            <TextField
+              name="content"
+              label="Content (Markdown)"
+              value={form.content}
+              onChange={handleChange}
               fullWidth
               multiline
-              rows={2}
-              value={form.synopsis}
-              onChange={(e) => setForm({ ...form, synopsis: e.target.value })}
+              rows={4}
             />
-            <TextField
-              label="Featured Image URL"
-              fullWidth
-              value={form.featuredImg}
-              onChange={(e) =>
-                setForm({ ...form, featuredImg: e.target.value })
-              }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Button component="label" variant="outlined" size="small">
-                      Upload
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                      />
-                    </Button>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            {previewURL && (
-              <CardMedia
-                component="img"
-                image={previewURL}
-                alt="Preview"
-                sx={{ height: 180, borderRadius: 2 }}
-              />
-            )}
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="contained"
-                onClick={handleSubmit}
-                disabled={!form.title || !form.synopsis || !form.featuredImg}
-              >
-                {editingId ? "Save Changes" : "Post Blog"}
-              </Button>
-              {editingId && (
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setEditingId(null);
-                    setForm({
-                      title: "",
-                      synopsis: "",
-                      featuredImg: "",
-                      content: "",
-                    });
-                    setPreviewURL("");
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-            </Stack>
+            <Input type="file" onChange={handleImageUpload} />
+            <Button variant="contained" onClick={handleCreateOrUpdateBlog} disabled={loading}>
+              {loading ? <CircularProgress size={24} color="inherit" /> : isEditing ? "Update Blog" : "Publish Blog"}
+            </Button>
           </Stack>
         </Paper>
 
-        {/* Blog List */}
-        <Typography variant="h4" mb={2}>
-          Latest Blogs
+        <Typography variant="h4" mb={2} align="left">
+          📰 Latest Blogs
         </Typography>
+        {error && <Typography color="error">{error}</Typography>}
 
-        {blogs.length === 0 ? (
-          <Typography>No blogs available.</Typography>
-        ) : (
-          <Stack spacing={4}>
-            {blogs.map((blog) => (
-              <Paper
-                key={blog.id}
-                elevation={2}
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  borderRadius: 2,
-                  "&:hover": { boxShadow: 6 },
-                }}
-              >
-                {blog.featuredImg && (
-                  <CardMedia
-                    component="img"
-                    src={blog.featuredImg}
-                    alt={blog.title}
-                    sx={{
-                      width: { xs: "100%", sm: 250 },
-                      height: { xs: 180, sm: "auto" },
-                      objectFit: "cover",
-                    }}
-                  />
-                )}
-                <Box sx={{ flex: 1, p: 3 }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {blog.title}
+        <Stack direction="row" flexWrap="wrap" gap={3} useFlexGap justifyContent="flex-start">
+          {blogs.map((blog) => (
+            <Box
+              key={blog.id}
+              sx={{
+                width: {
+                  xs: "100%",
+                  sm: "calc(50% - 12px)",
+                  md: "calc(33.333% - 16px)",
+                },
+                flexGrow: 1,
+              }}
+            >
+              <Card sx={{ height: "100%", display: "flex", flexDirection: "column", boxShadow: 4 }}>
+                <CardMedia
+                  component="img"
+                  height="160"
+                  image={`${backendBaseURL}${blog.featuredImg}`}
+                  alt={blog.title}
+                />
+                <CardContent>
+                  <Typography variant="h6">{blog.title}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    ⏰ {new Date(blog.createdAt).toLocaleString()}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    gutterBottom
-                  >
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
                     {blog.synopsis}
                   </Typography>
-                  <Box display="flex" alignItems="center" mt={2}>
-                    <Avatar sx={{ width: 28, height: 28, mr: 1 }}>
-                      {avatarInitials(blog.author.name)}
-                    </Avatar>
-                    <Typography variant="caption" color="text.secondary">
-                      {blog.author.name}
-                    </Typography>
-                  </Box>
-                  <Button
-                    size="small"
-                    onClick={() => handleEdit(blog)}
-                    sx={{ mt: 1 }}
-                  >
-                    Edit
-                  </Button>
-                </Box>
-              </Paper>
-            ))}
-          </Stack>
-        )}
+                  <Stack direction="row" spacing={1} alignItems="center" mt={1}>
+                    <Avatar>{blog.author.name.charAt(0)}</Avatar>
+                    <Typography variant="body2">{blog.author.name}</Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={1} mt={2}>
+                    <Button onClick={() => setSelectedBlog(blog)} size="small">
+                      Read More
+                    </Button>
+                    <Button onClick={() => handleEdit(blog)} size="small" color="primary" startIcon={<EditIcon />}>
+                      Edit
+                    </Button>
+                    <Button onClick={() => handleDelete(blog.id)} size="small" color="error" startIcon={<DeleteIcon />}>
+                      Delete
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
+          ))}
+        </Stack>
       </Container>
+
+      {/* Read More Modal */}
+      <Modal open={!!selectedBlog} onClose={() => setSelectedBlog(null)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            p: 4,
+            borderRadius: 2,
+            width: "90%",
+            maxWidth: 800,
+            maxHeight: "90vh",
+            overflowY: "auto",
+            boxShadow: 24,
+          }}
+        >
+          {selectedBlog && (
+            <>
+              <Typography variant="h4">{selectedBlog.title}</Typography>
+              <img
+                src={`${backendBaseURL}${selectedBlog.featuredImg}`}
+                alt={selectedBlog.title}
+                style={{
+                  width: "60%",
+                  borderRadius: 10,
+                  display: "block",
+                  margin: "20px auto",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }}
+              />
+              <Typography variant="subtitle1" mt={2} color="text.secondary">
+                {selectedBlog.synopsis}
+              </Typography>
+              <Box mt={2}>
+                <ReactMarkdown>{selectedBlog.content}</ReactMarkdown>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
-}
+};
+
+export default BlogsPage;
