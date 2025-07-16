@@ -1,8 +1,9 @@
 const { PrismaClient } = require("@prisma/client");
 const { marked } = require("marked");
 const prisma = new PrismaClient();
+const path = require("path");
+const fs = require("fs");
 
-// ✅ Create a new blog
 exports.createBlog = async (req, res) => {
   const { title, synopsis, content, featuredImg } = req.body;
   const userId = req.user?.userId;
@@ -21,7 +22,7 @@ exports.createBlog = async (req, res) => {
         content,
         featuredImg,
         author: {
-          connect: { id: userId }, // ✅ connect blog to user by ID
+          connect: { id: userId },
         },
       },
       include: {
@@ -43,7 +44,6 @@ exports.createBlog = async (req, res) => {
   }
 };
 
-// ✅ Get all non-deleted blogs
 exports.getAllBlogs = async (req, res) => {
   try {
     const blogs = await prisma.blog.findMany({
@@ -77,7 +77,6 @@ exports.getAllBlogs = async (req, res) => {
   }
 };
 
-// ✅ Get a single blog (with markdown rendered)
 exports.getBlogById = async (req, res) => {
   const blogId = parseInt(req.params.blogId);
 
@@ -95,8 +94,6 @@ exports.getBlogById = async (req, res) => {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    const htmlContent = marked(blog.content);
-
     res.json({
       id: blog.id,
       title: blog.title,
@@ -104,7 +101,7 @@ exports.getBlogById = async (req, res) => {
       synopsis: blog.synopsis,
       createdAt: blog.createdAt,
       updatedAt: blog.updatedAt,
-      content: htmlContent,
+      content: blog.content,
       author: {
         name: `${blog.author.firstName} ${blog.author.lastName}`,
         avatar:
@@ -117,48 +114,50 @@ exports.getBlogById = async (req, res) => {
   }
 };
 
-// ✅ Update a blog
 exports.updateBlog = async (req, res) => {
   const blogId = parseInt(req.params.blogId);
-  const userId = req.user.userId; // ✅ fix here
-
-  const { title, synopsis, content, featuredImg } = req.body;
+  const userId = req.user.userId;
 
   try {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
 
-    if (!blog || blog.isDeleted) {
-      return res.status(404).json({ message: "Blog not found" });
+    if (!blog || blog.authorId !== userId) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
-    if (blog.authorId !== userId) {
-      return res
-        .status(403)
-        .json({ message: "Unauthorized to update this blog" });
+    const { title, synopsis, content } = req.body;
+    let featuredImg = blog.featuredImg;
+
+    if (req.file) {
+     if (featuredImg) {
+  const imagePath = path.join(__dirname, "..", "public", featuredImg);
+  if (fs.existsSync(imagePath)) {
+    try {
+      fs.unlinkSync(imagePath);
+    } catch (err) {
+      console.warn("⚠️ Failed to delete old image:", err.message);
+    }
+  }
+}
+
+      featuredImg = `/uploads/${req.file.filename}`;
     }
 
     const updatedBlog = await prisma.blog.update({
       where: { id: blogId },
-      data: {
-        title,
-        synopsis,
-        content,
-        featuredImg,
-        updatedAt: new Date(),
-      },
+      data: { title, synopsis, content, featuredImg },
     });
 
     res.json(updatedBlog);
-  } catch (error) {
-    console.error("Blog update error:", error);
-    res.status(500).json({ message: "Something went wrong" });
+  } catch (err) {
+    console.error("❌ Error updating blog:", err);
+    res.status(500).json({ message: "Failed to update blog" });
   }
 };
 
-// ✅ Delete a blog (soft delete)
 exports.deleteBlog = async (req, res) => {
   const blogId = parseInt(req.params.blogId);
-  const userId = req.user.userId; // ✅ fix here
+  const userId = req.user.userId;
 
   try {
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });

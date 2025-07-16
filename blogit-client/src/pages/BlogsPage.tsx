@@ -1,4 +1,3 @@
-// Keep your imports as they are
 import React, { useEffect, useState, type ChangeEvent } from "react";
 import axios from "axios";
 import {
@@ -39,6 +38,8 @@ interface Blog {
     avatar: string;
   };
 }
+const truncateText = (text: string, maxLength: number = 120): string =>
+  text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
 
 const backendBaseURL = "http://localhost:5000";
 
@@ -66,13 +67,24 @@ const BlogsPage: React.FC = () => {
     fetchBlogs();
   }, []);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setImageFile(e.target.files[0]);
+    }
+  };
+
+  const handleReadMore = async (blogId: number) => {
+    try {
+      const res = await axios.get(`${backendBaseURL}/api/blogs/${blogId}`);
+      setSelectedBlog(res.data);
+    } catch (err) {
+      toast.error("❌ Failed to load full blog");
     }
   };
 
@@ -150,11 +162,23 @@ const BlogsPage: React.FC = () => {
       <Container maxWidth="md">
         <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
           <Typography variant="h5" mb={2}>
-            📝 Create New Blog
+            Create New Blog
           </Typography>
           <Stack spacing={2}>
-            <TextField name="title" label="Title" value={form.title} onChange={handleChange} fullWidth />
-            <TextField name="synopsis" label="Synopsis" value={form.synopsis} onChange={handleChange} fullWidth />
+            <TextField
+              name="title"
+              label="Title"
+              value={form.title}
+              onChange={handleChange}
+              fullWidth
+            />
+            <TextField
+              name="synopsis"
+              label="Synopsis"
+              value={form.synopsis}
+              onChange={handleChange}
+              fullWidth
+            />
             <TextField
               name="content"
               label="Content (Markdown)"
@@ -165,18 +189,32 @@ const BlogsPage: React.FC = () => {
               rows={4}
             />
             <Input type="file" onChange={handleImageUpload} />
-            <Button variant="contained" onClick={handleCreateBlog} disabled={loading}>
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Publish Blog"}
+            <Button
+              variant="contained"
+              onClick={handleCreateBlog}
+              disabled={loading}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Publish Blog"
+              )}
             </Button>
           </Stack>
         </Paper>
 
-        <Typography variant="h4" mb={2} align="left">
-          📰 Latest Blogs
+        <Typography variant="h6" mb={2} align="left">
+          Latest Blogs
         </Typography>
         {error && <Typography color="error">{error}</Typography>}
 
-        <Stack direction="row" flexWrap="wrap" gap={3} useFlexGap justifyContent="flex-start">
+        <Stack
+          direction="row"
+          flexWrap="wrap"
+          gap={10}
+          useFlexGap
+          justifyContent="flex-start"
+        >
           {blogs.map((blog) => (
             <Box
               key={blog.id}
@@ -189,7 +227,14 @@ const BlogsPage: React.FC = () => {
                 flexGrow: 1,
               }}
             >
-              <Card sx={{ height: "100%", display: "flex", flexDirection: "column", boxShadow: 4 }}>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  boxShadow: 4,
+                }}
+              >
                 <CardMedia
                   component="img"
                   height="160"
@@ -198,18 +243,26 @@ const BlogsPage: React.FC = () => {
                 />
                 <CardContent>
                   <Typography variant="h6">{blog.title}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    ⏰ {new Date(blog.createdAt).toLocaleString()}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    {truncateText(blog.synopsis, 25)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {blog.synopsis}
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center" mt={1}>
+                
+                  <Stack direction="row" spacing={1} alignItems="center" mt={1} mb={2}>
                     <Avatar>{blog.author.name.charAt(0)}</Avatar>
                     <Typography variant="body2">{blog.author.name}</Typography>
                   </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(blog.createdAt).toLocaleString()}
+                  </Typography>
                   <Stack direction="row" spacing={1} mt={2}>
-                    <Button onClick={() => setSelectedBlog(blog)} size="small">
+                    <Button
+                      onClick={() => handleReadMore(blog.id)}
+                      size="medium"
+                    >
                       Read More
                     </Button>
                   </Stack>
@@ -265,4 +318,4 @@ const BlogsPage: React.FC = () => {
   );
 };
 
-export default BlogsPage
+export default BlogsPage;

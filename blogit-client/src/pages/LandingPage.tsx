@@ -67,7 +67,6 @@ export default function LandingPage() {
 
   return (
     <>
-      {/* Static Top Header Before Scroll */}
       <Box
         sx={{
           position: "absolute",
@@ -114,7 +113,6 @@ export default function LandingPage() {
 
       <Navbar />
 
-      {/* Hero Section */}
       <Box
         sx={{
           minHeight: "100vh",
@@ -133,7 +131,7 @@ export default function LandingPage() {
           transition: "background-color 1s ease-in-out",
         }}
       >
-        {/* Hero Text */}
+
         <Fade in={loaded} timeout={1200}>
           <Box sx={{ zIndex: 1, maxWidth: 700 }}>
             <Typography
@@ -183,7 +181,6 @@ export default function LandingPage() {
           </Box>
         </Fade>
 
-        {/* Decorative Images */}
         <Box
           sx={{
             position: "absolute",
@@ -203,7 +200,6 @@ export default function LandingPage() {
               transition={{ type: "spring", stiffness: 50 }}
               style={{ position: "relative", width: "100%", height: "100%" }}
             >
-              {/* Left Images */}
               {currentTheme.images.left.map((src, index) => (
                 <Box
                   key={`left-${index}`}
@@ -221,7 +217,6 @@ export default function LandingPage() {
                 />
               ))}
 
-              {/* Right Images */}
               {currentTheme.images.right.map((src, index) => (
                 <Box
                   key={`right-${index}`}
@@ -239,7 +234,6 @@ export default function LandingPage() {
                 />
               ))}
 
-              {/* Center Image (desktop only) */}
               {!isSmallScreen && (
                 <Paper
                   elevation={6}

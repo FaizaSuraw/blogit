@@ -1,49 +1,33 @@
-import React, { useEffect, useState, type ChangeEvent } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
-  AppBar,
-  Toolbar,
   Typography,
-  Button,
   TextField,
+  Button,
+  Container,
   Stack,
-  Box,
+  Paper,
   Card,
   CardMedia,
   CardContent,
-  
   IconButton,
-  Container,
-  Paper,
+  AppBar,
+  Toolbar,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AddIcon from "@mui/icons-material/Add";
+import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-interface Blog {
-  id: number;
-  title: string;
-  synopsis: string;
-  content: string;
-  featuredImg: string;
-  createdAt: string;
-}
-
-interface User {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-}
 
 const backendBaseURL = "http://localhost:5000";
 
 const ProfilePage: React.FC = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [user, setUser] = useState<User>({
+  const [profile, setProfile] = useState<any>(null);
+  const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     username: "",
@@ -53,76 +37,83 @@ const ProfilePage: React.FC = () => {
     currentPassword: "",
     newPassword: "",
   });
-
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const fetchUserData = async () => {
+  const fetchProfile = async () => {
     try {
-      const res = await axios.get(`${backendBaseURL}/api/users/`, {
+      const res = await axios.get(`${backendBaseURL}/api/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUser(res.data.user);
-      setBlogs(res.data.blogs); // assuming backend returns both
-    } catch {
-      toast.error("Failed to fetch user data");
+      setProfile(res.data);
+      setForm({
+        firstName: res.data.firstName,
+        lastName: res.data.lastName,
+        username: res.data.username,
+        email: res.data.email,
+      });
+    } catch (err) {
+      toast.error("Failed to fetch profile");
     }
   };
 
   useEffect(() => {
-    fetchUserData();
+    fetchProfile();
   }, []);
 
-  const handleUserChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+  const handleProfileChange = (e: any) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = (e: any) => {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
   };
 
-  const handleUserUpdate = async () => {
+  const handleUpdateProfile = async () => {
     try {
-      await axios.put(`${backendBaseURL}/api/users/update`, user, {
+      await axios.patch(`${backendBaseURL}/api/profile`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("✅ User info updated");
+      toast.success("Profile updated");
     } catch {
-      toast.error("❌ Failed to update user info");
+      toast.error("Failed to update profile");
     }
   };
 
-  const handlePasswordUpdate = async () => {
+  const handleUpdatePassword = async () => {
     try {
-      if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-        return toast.warning("Please fill both password fields");
-      }
-
-      await axios.put(`${backendBaseURL}/api/users/password`, passwordForm, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("🔐 Password updated");
+      await axios.patch(
+        `${backendBaseURL}/api/profile/update-password`,
+        passwordForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      toast.success("Password updated");
       setPasswordForm({ currentPassword: "", newPassword: "" });
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error updating password");
+      toast.error(
+        err.response?.data?.message || "Failed to update password",
+      );
     }
   };
 
   const handleDeleteBlog = async (blogId: number) => {
-    if (!window.confirm("Are you sure you want to delete this blog?")) return;
+    const confirm = window.confirm("Delete this blog?");
+    if (!confirm) return;
     try {
       await axios.delete(`${backendBaseURL}/api/blogs/${blogId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("🗑️ Blog deleted");
-      fetchUserData();
+      toast.info("Blog deleted");
+      fetchProfile();
     } catch {
-      toast.error("Error deleting blog");
+      toast.error("Failed to delete blog");
     }
   };
 
   const handleEditBlog = (blogId: number) => {
-    navigate(`/edit/${blogId}`);
+    navigate(`/edit-blog/${blogId}`);
   };
 
   const handleLogout = () => {
@@ -131,29 +122,59 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <Box>
-      <ToastContainer />
-      <AppBar position="sticky" sx={{ mb: 4 }}>
+    <>
+      <AppBar position="static" color="primary">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Profile
+            Welcome
           </Typography>
-          <Button color="inherit" onClick={() => navigate("/")}>
+          <Button
+            color="inherit"
+            startIcon={<HomeIcon />}
+            onClick={() => navigate("/")}
+          >
             Home
           </Button>
-          <IconButton color="inherit" onClick={handleLogout}>
+          <Button color="inherit" onClick={() => navigate("/blogs")}>
+            Blogs
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/blogs")}
+          >
+            Create Blog
+          </Button>
+          <IconButton onClick={handleLogout} color="inherit">
             <LogoutIcon />
           </IconButton>
         </Toolbar>
       </AppBar>
 
-             <Typography variant="h5" mb={2}>📝 My Blogs</Typography>
-        <Stack spacing={3}>
-          {blogs.map((blog) => (
-            <Card key={blog.id}>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <ToastContainer position="bottom-right" />
+        <Typography variant="h4" gutterBottom mb={1}>
+          MY BLOGS
+        </Typography>
+
+        <Stack direction="row" flexWrap="wrap" gap={3} mb={4}>
+          {profile?.blogs?.map((blog: any) => (
+            <Card
+              key={blog.id}
+              sx={{
+                width: {
+                  xs: "100%",
+                  sm: "calc(50% - 12px)",
+                  md: "calc(33.333% - 16px)",
+                },
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 2,
+              }}
+            >
               <CardMedia
                 component="img"
-                height="160"
+                height="140"
                 image={`${backendBaseURL}${blog.featuredImg}`}
                 alt={blog.title}
               />
@@ -168,17 +189,17 @@ const ProfilePage: React.FC = () => {
                 <Stack direction="row" spacing={1} mt={2}>
                   <Button
                     onClick={() => handleEditBlog(blog.id)}
+                    size="small"
                     color="primary"
                     startIcon={<EditIcon />}
-                    size="small"
                   >
                     Edit
                   </Button>
                   <Button
                     onClick={() => handleDeleteBlog(blog.id)}
+                    size="small"
                     color="error"
                     startIcon={<DeleteIcon />}
-                    size="small"
                   >
                     Delete
                   </Button>
@@ -188,43 +209,63 @@ const ProfilePage: React.FC = () => {
           ))}
         </Stack>
 
-      <Container maxWidth="md">
-        {/* Personal Info Update */}
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h6">🧑 Update Personal Info</Typography>
+        <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
+          <Typography variant="h6">Update Profile Info</Typography>
           <Stack spacing={2} mt={2}>
-            <TextField name="firstName" label="First Name" value={user.firstName} onChange={handleUserChange} />
-            <TextField name="lastName" label="Last Name" value={user.lastName} onChange={handleUserChange} />
-            <TextField name="username" label="Username" value={user.username} onChange={handleUserChange} />
-            <TextField name="email" label="Email" value={user.email} onChange={handleUserChange} />
-            <Button variant="contained" onClick={handleUserUpdate}>Update Info</Button>
+            <TextField
+              name="firstName"
+              label="First Name"
+              value={form.firstName}
+              onChange={handleProfileChange}
+            />
+            <TextField
+              name="lastName"
+              label="Last Name"
+              value={form.lastName}
+              onChange={handleProfileChange}
+            />
+            <TextField
+              name="username"
+              label="Username"
+              value={form.username}
+              onChange={handleProfileChange}
+            />
+            <TextField
+              name="email"
+              label="Email"
+              value={form.email}
+              onChange={handleProfileChange}
+            />
+            <Button variant="contained" onClick={handleUpdateProfile}>
+              Update Profile
+            </Button>
           </Stack>
         </Paper>
 
-        {/* Password Update */}
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h6">🔐 Change Password</Typography>
+        <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
+          <Typography variant="h6">Update Password</Typography>
           <Stack spacing={2} mt={2}>
             <TextField
-              label="Current Password"
               name="currentPassword"
+              label="Current Password"
               type="password"
               value={passwordForm.currentPassword}
               onChange={handlePasswordChange}
             />
             <TextField
-              label="New Password"
               name="newPassword"
+              label="New Password"
               type="password"
               value={passwordForm.newPassword}
               onChange={handlePasswordChange}
             />
-            <Button variant="contained" onClick={handlePasswordUpdate}>Update Password</Button>
+            <Button variant="contained" onClick={handleUpdatePassword}>
+              Change Password
+            </Button>
           </Stack>
         </Paper>
-
       </Container>
-    </Box>
+    </>
   );
 };
 

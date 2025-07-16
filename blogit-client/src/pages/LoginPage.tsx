@@ -16,7 +16,6 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
-// Zod schema
 const schema = z.object({
   emailOrUsername: z.string().min(3, "Enter a valid email or username"),
   password: z.string().min(1, "Password is required"),

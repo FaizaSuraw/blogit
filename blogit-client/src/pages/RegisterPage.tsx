@@ -57,7 +57,7 @@ export default function RegisterPage() {
         data,
       );
       console.log("✅ Registration successful:", res.data);
-      localStorage.setItem("token", res.data.token); // ✅ Save token
+      localStorage.setItem("token", res.data.token);
       setSuccess(true);
       setTimeout(() => {
         navigate("/blogs");

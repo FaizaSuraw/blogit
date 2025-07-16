@@ -14,7 +14,7 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = { userId: decoded.userId }; // ✅ FIXED: use userId
+    req.user = { userId: decoded.userId };
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid or expired token" });

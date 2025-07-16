@@ -1,4 +1,3 @@
-// src/components/About.tsx
 import { Box, Typography } from "@mui/material";
 
 export default function About() {
@@ -18,7 +17,6 @@ export default function About() {
         justifyContent: "space-between",
       }}
     >
-      {/* Text Content */}
       <Box
         sx={{
           maxWidth: { xs: "100%", md: "50%" },
@@ -53,7 +51,6 @@ export default function About() {
         </Typography>
       </Box>
 
-      {/* Image Side */}
       <Box
         sx={{
           position: "relative",

@@ -17,7 +17,6 @@ export default function Footer() {
     <Box
       sx={{ bgcolor: "#1D2B34", color: "#fff", py: 6, px: { xs: 3, md: 10 } }}
     >
-      {/* Top Section */}
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={4}
@@ -25,7 +24,6 @@ export default function Footer() {
         alignItems="flex-start"
         flexWrap="wrap"
       >
-        {/* Help */}
         <Stack spacing={1}>
           <Typography variant="h6" fontWeight="bold">
             Help
@@ -41,7 +39,6 @@ export default function Footer() {
           </Link>
         </Stack>
 
-        {/* Community */}
         <Stack spacing={1}>
           <Typography variant="h6" fontWeight="bold">
             Community
@@ -51,7 +48,6 @@ export default function Footer() {
           </Link>
         </Stack>
 
-        {/* Developers */}
         <Stack spacing={1}>
           <Typography variant="h6" fontWeight="bold">
             Developers
@@ -76,7 +72,6 @@ export default function Footer() {
           </Link>
         </Stack>
 
-        {/* Social Media */}
         <Stack spacing={1}>
           <Typography variant="h6" fontWeight="bold">
             Follow Us
@@ -118,10 +113,8 @@ export default function Footer() {
         </Stack>
       </Stack>
 
-      {/* Divider */}
       <Divider sx={{ my: 4 }} />
 
-      {/* Bottom Section */}
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
@@ -129,7 +122,6 @@ export default function Footer() {
         spacing={2}
         flexWrap="wrap"
       >
-        {/* Terms & Privacy */}
         <Stack direction="row" spacing={3}>
           <Link href="/terms" underline="hover" color="inherit">
             Terms of Service
@@ -141,8 +133,6 @@ export default function Footer() {
             Content Policy
           </Link>
         </Stack>
-
-        {/* Language Selector */}
         <Select
           defaultValue="en"
           variant="standard"
