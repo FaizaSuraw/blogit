@@ -1,3 +1,4 @@
+// Keep your imports as they are
 import React, { useEffect, useState, type ChangeEvent } from "react";
 import axios from "axios";
 import {
@@ -21,8 +22,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { ToastContainer, toast } from "react-toastify";
@@ -50,8 +49,6 @@ const BlogsPage: React.FC = () => {
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingBlogId, setEditingBlogId] = useState<number | null>(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -79,7 +76,7 @@ const BlogsPage: React.FC = () => {
     }
   };
 
-  const handleCreateOrUpdateBlog = async () => {
+  const handleCreateBlog = async () => {
     if (!form.title || !form.synopsis || !form.content) {
       toast.warning("Please fill in all blog fields");
       return;
@@ -108,50 +105,19 @@ const BlogsPage: React.FC = () => {
         ...(featuredImg && { featuredImg }),
       };
 
-      if (isEditing && editingBlogId !== null) {
-        await axios.put(`${backendBaseURL}/api/blogs/${editingBlogId}`, blogData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast.success("✅ Blog updated successfully");
-      } else {
-        await axios.post(`${backendBaseURL}/api/blogs`, blogData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast.success("✅ Blog posted successfully");
-      }
+      await axios.post(`${backendBaseURL}/api/blogs`, blogData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
+      toast.success("✅ Blog posted successfully");
       setForm({ title: "", synopsis: "", content: "" });
       setImageFile(null);
-      setIsEditing(false);
-      setEditingBlogId(null);
       fetchBlogs();
     } catch (err: any) {
       console.error(err.response?.data || err.message);
       toast.error("❌ Error saving blog");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleEdit = (blog: Blog) => {
-    setForm({ title: blog.title, synopsis: blog.synopsis, content: blog.content });
-    setIsEditing(true);
-    setEditingBlogId(blog.id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleDelete = async (blogId: number) => {
-    const confirm = window.confirm("Are you sure you want to delete this blog?");
-    if (!confirm) return;
-
-    try {
-      await axios.delete(`${backendBaseURL}/api/blogs/${blogId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.info("🗑️ Blog deleted");
-      fetchBlogs();
-    } catch (err) {
-      toast.error("Failed to delete blog");
     }
   };
 
@@ -184,23 +150,11 @@ const BlogsPage: React.FC = () => {
       <Container maxWidth="md">
         <Paper sx={{ p: 3, mb: 4 }} elevation={3}>
           <Typography variant="h5" mb={2}>
-            {isEditing ? "✏️ Edit Blog" : "📝 Create New Blog"}
+            📝 Create New Blog
           </Typography>
           <Stack spacing={2}>
-            <TextField
-              name="title"
-              label="Title"
-              value={form.title}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              name="synopsis"
-              label="Synopsis"
-              value={form.synopsis}
-              onChange={handleChange}
-              fullWidth
-            />
+            <TextField name="title" label="Title" value={form.title} onChange={handleChange} fullWidth />
+            <TextField name="synopsis" label="Synopsis" value={form.synopsis} onChange={handleChange} fullWidth />
             <TextField
               name="content"
               label="Content (Markdown)"
@@ -211,8 +165,8 @@ const BlogsPage: React.FC = () => {
               rows={4}
             />
             <Input type="file" onChange={handleImageUpload} />
-            <Button variant="contained" onClick={handleCreateOrUpdateBlog} disabled={loading}>
-              {loading ? <CircularProgress size={24} color="inherit" /> : isEditing ? "Update Blog" : "Publish Blog"}
+            <Button variant="contained" onClick={handleCreateBlog} disabled={loading}>
+              {loading ? <CircularProgress size={24} color="inherit" /> : "Publish Blog"}
             </Button>
           </Stack>
         </Paper>
@@ -258,12 +212,6 @@ const BlogsPage: React.FC = () => {
                     <Button onClick={() => setSelectedBlog(blog)} size="small">
                       Read More
                     </Button>
-                    <Button onClick={() => handleEdit(blog)} size="small" color="primary" startIcon={<EditIcon />}>
-                      Edit
-                    </Button>
-                    <Button onClick={() => handleDelete(blog.id)} size="small" color="error" startIcon={<DeleteIcon />}>
-                      Delete
-                    </Button>
                   </Stack>
                 </CardContent>
               </Card>
@@ -272,7 +220,6 @@ const BlogsPage: React.FC = () => {
         </Stack>
       </Container>
 
-      {/* Read More Modal */}
       <Modal open={!!selectedBlog} onClose={() => setSelectedBlog(null)}>
         <Box
           sx={{
@@ -318,4 +265,4 @@ const BlogsPage: React.FC = () => {
   );
 };
 
-export default BlogsPage;
+export default BlogsPage

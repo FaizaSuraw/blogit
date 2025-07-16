@@ -45,7 +45,14 @@ exports.register = async (req, res) => {
       },
     });
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    const payload = {
+      userId: user.id, 
+      userName: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName
+    }
+
+    const token = jwt.sign(payload, JWT_SECRET, {
       expiresIn: "1d",
     });
 
@@ -78,7 +85,14 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    const payload = {
+      userId: user.id, 
+      userName: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName
+    }
+
+    const token = jwt.sign(payload, JWT_SECRET, {
       expiresIn: "1d",
     });
 

@@ -5,12 +5,10 @@ import RegisterPage from "./pages/RegisterPage";
 import BlogsPage from "./pages/BlogsPage";
 import ProfilePage from "./pages/ProfilePage";
 import RequireAuth from "./components/RequireAuth";
-import Navbar from "./components/Navbar";
 
 export default function App() {
   return (
     <>
-      <Navbar />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
