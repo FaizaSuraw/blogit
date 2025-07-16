@@ -121,13 +121,13 @@ const BlogsPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      toast.success("✅ Blog posted successfully");
+      toast.success("Blog posted successfully");
       setForm({ title: "", synopsis: "", content: "" });
       setImageFile(null);
       fetchBlogs();
     } catch (err: any) {
       console.error(err.response?.data || err.message);
-      toast.error("❌ Error saving blog");
+      toast.error("Error saving blog");
     } finally {
       setLoading(false);
     }
@@ -203,7 +203,7 @@ const BlogsPage: React.FC = () => {
           </Stack>
         </Paper>
 
-        <Typography variant="h6" mb={2} align="left">
+        <Typography variant="h5" mb={2} align="left">
           Latest Blogs
         </Typography>
         {error && <Typography color="error">{error}</Typography>}
@@ -211,7 +211,7 @@ const BlogsPage: React.FC = () => {
         <Stack
           direction="row"
           flexWrap="wrap"
-          gap={10}
+          gap={5}
           useFlexGap
           justifyContent="flex-start"
         >
