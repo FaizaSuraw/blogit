@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 const app = express();
 
 app.use(cors({
-  origin: "https://blogit-seven.vercel.app/"
+  origin: "https://blogit-seven.vercel.app"
 }));
 app.use(express.json());
 
