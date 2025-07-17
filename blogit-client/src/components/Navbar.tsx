@@ -1,84 +1,87 @@
-import { Box, Button, Typography, useMediaQuery } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, Button, Typography, useMediaQuery, useTheme, Slide, AppBar, Toolbar, Container } from "@mui/material"
+import { useEffect, useState } from "react"
+import { Edit, Login } from "@mui/icons-material"
 
 export default function Navbar() {
-  const [showNavbar, setShowNavbar] = useState(false);
-  const isSmallScreen = useMediaQuery("(max-width:600px)");
+  const [showNavbar, setShowNavbar] = useState(false)
+  const theme = useTheme()
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"))
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowNavbar(window.scrollY > 60);
-    };
+      setShowNavbar(window.scrollY > 100)
+    }
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  if (!showNavbar) return null;
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        backgroundColor: "background.default",
-        color: "text.primary",
-        zIndex: 999,
-        px: { xs: 2, sm: 6 },
-        py: 2,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-      }}
-    >
-      <Typography
-        variant="h6"
+    <Slide direction="down" in={showNavbar} mountOnEnter unmountOnExit>
+      <AppBar
+        position="fixed"
         sx={{
-          fontWeight: 700,
-          fontFamily: `'Roboto Slab', serif`,
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
         }}
       >
-        BlogIt
-      </Typography>
+        <Container maxWidth="lg">
+          <Toolbar sx={{ justifyContent: "space-between", py: 1 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 800,
+                color: "primary.main",
+                fontFamily: '"Poppins", sans-serif',
+                background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              BlogIt
+            </Typography>
 
-      <Box display="flex" alignItems="center" gap={2}>
-        {!isSmallScreen && (
-          <>
-            <Button
-              variant="outlined"
-              href="/login"
-              sx={{
-                color: "text.primary",
-                borderColor: "#e69500",
-                fontWeight: 600,
-                "&:hover": {
-                  color: "#e69500",
-                  borderColor: "#e69500",
-                },
-              }}
-            >
-              Sign In
-            </Button>
-            <Button
-              variant="contained"
-              href="/register"
-              sx={{
-                backgroundColor: "#e69500",
-                color: "#000",
-                fontWeight: 600,
-                "&:hover": {
-                  backgroundColor: "#ffb700",
-                },
-              }}
-            >
-              Create your blog
-            </Button>
-          </>
-        )}
-      </Box>
-    </Box>
-  );
+            {!isSmallScreen && (
+              <Box display="flex" alignItems="center" gap={2}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Login />}
+                  href="/login"
+                  sx={{
+                    color: "text.primary",
+                    borderColor: "divider",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                      backgroundColor: "primary.50",
+                    },
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Edit />}
+                  href="/register"
+                  sx={{
+                    background: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+                    color: "#000",
+                    boxShadow: "0 4px 14px rgba(245, 158, 11, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
+                      boxShadow: "0 6px 20px rgba(245, 158, 11, 0.4)",
+                    },
+                  }}
+                >
+                  Start Writing
+                </Button>
+              </Box>
+            )}
+          </Toolbar>
+        </Container>
+      </AppBar>
+    </Slide>
+  )
 }
