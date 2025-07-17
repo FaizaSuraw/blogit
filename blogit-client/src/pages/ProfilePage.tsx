@@ -47,7 +47,7 @@ import { useNavigate } from "react-router-dom"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 
-const backendBaseURL = "https://blogit-1xz6.onrender.com/"
+const backendBaseURL = "https://blogit-1xz6.onrender.com"
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<any>(null)
