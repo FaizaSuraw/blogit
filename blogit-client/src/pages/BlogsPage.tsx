@@ -59,7 +59,7 @@ interface Blog {
 const truncateText = (text: string, maxLength = 120): string =>
   text.length > maxLength ? text.slice(0, maxLength) + "..." : text
 
-const backendBaseURL = "http://localhost:5000"
+const backendBaseURL = "https://blogit-1xz6.onrender.com/"
 
 const BlogsPage: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([])

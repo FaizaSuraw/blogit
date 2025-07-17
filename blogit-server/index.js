@@ -8,7 +8,9 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ""
+}));
 app.use(express.json());
 
 const testRoutes = require("./routes/test.routes");

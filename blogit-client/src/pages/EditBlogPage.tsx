@@ -33,7 +33,7 @@ import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import ReactMarkdown from "react-markdown"
 
-const backendBaseURL = "http://localhost:5000"
+const backendBaseURL = "https://blogit-1xz6.onrender.com/"
 
 const EditBlogPage: React.FC = () => {
   const { id } = useParams()

@@ -56,7 +56,7 @@ export default function RegisterPage() {
       setErrorMessage("")
       setSuccess(false)
       setLoading(true)
-      const res = await axios.post("http://localhost:5000/api/auth/register", data)
+      const res = await axios.post("https://blogit-1xz6.onrender.com/api/auth/register", data)
       console.log("Registration successful:", res.data)
       localStorage.setItem("token", res.data.token)
       setSuccess(true)
